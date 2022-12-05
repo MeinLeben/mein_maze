@@ -1,0 +1,18 @@
+# visual studio cache folder
+/.vs
+
+# visual code settings folder
+#/.vscode
+
+# user specific files
+*.suo
+*.user
+
+# build folder
+/[Bb]uild
+
+/[Dd]ata
+
+# OS generatedFiles
+.DS_Store
+Thumbs.db
