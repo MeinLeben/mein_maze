@@ -1,14 +1,20 @@
 #pragma once
 
+#include <atomic>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
 #include <deque>
+#include <future>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <unordered_set>
+#include <vector>
 
 #define SDL_MAIN_HANDLED
 #include <SDL.h>

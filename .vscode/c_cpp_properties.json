@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "/opt/homebrew/include/SDL2",
+            ],
+            "forcedInclude": ["${workspaceFolder}/src/pch.h"],
+            "defines": ["DEBUG"],
+            "macFrameworkPath": [],
+            "compilerPath": "/opt/homebrew/bin/gcc-12",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "macos-gcc-arm64"
+        }
+    ],
+    "version": 4
+}

@@ -2,7 +2,13 @@
 
 #include "path_finder.h"
 
-bool PathFinder::Execute(const Int2& start, const Int2& destination, GridNode grid[][kGridSize], size_t size) {
+#include "grid.h"
+
+PathFinder::~PathFinder() {
+	Reset();
+}
+
+void PathFinder::Execute(const Int2& start, const Int2& destination, const Grid* pGrid, std::promise<bool>&& found) {
 	bool result = false;
 	m_openList.insert(new Node{ nullptr, start, 0.0f, 0.0f, 0.0f });
 
@@ -39,7 +45,7 @@ bool PathFinder::Execute(const Int2& start, const Int2& destination, GridNode gr
 					break;
 				}
 
-				if (grid[childPos.x][childPos.y] == GridNode::Collision)
+				if (pGrid->GetState(childPos.x, childPos.y) == GridState::Collision)
 					continue;
 /*
 				if (abs(x) == 1 && abs(y) == 1) {
@@ -76,17 +82,18 @@ bool PathFinder::Execute(const Int2& start, const Int2& destination, GridNode gr
 			}
 		}
 
-		if (result)
+		if (result) {
 			break;
+		}
 
 		m_closedList.push_back(q);
 	}
 
-	TracePath(m_closedList, grid);
+	TracePath(m_closedList);
 
 	Reset();
 
-	return result;
+	found.set_value(result);
 }
 
 void PathFinder::Reset() {
@@ -113,24 +120,16 @@ PathFinder::Node* PathFinder::FindNode(const T& list, const Int2& position) cons
 	return nullptr;
 }
 
-void PathFinder::TracePath(std::deque<Node*>& closedList, GridNode grid[][kGridSize], size_t size) {
-	std::vector<Node*> path;
-
+void PathFinder::TracePath(std::deque<Node*>& closedList) {
 	Node* pParent = nullptr;
 	while (!closedList.empty()) {
 		Node* pNode = closedList.back();
 		if (!pParent || pNode == pParent) {
-			path.push_back(pNode);
+			m_path.push_back(pNode->pos);
 			pParent = pNode->m_pParent;
-		} else {
-			delete pNode;
 		}
+		delete pNode;
 		closedList.pop_back();
-	}
-
-	for (auto iter : path) {
-		grid[iter->pos.x][iter->pos.y] = GridNode::Path;
-		delete iter;
 	}
 }
 

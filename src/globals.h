@@ -1,12 +1,12 @@
 #pragma once
 
-const static int32_t kWindowWidth = 1280;
-const static int32_t kWindowHeight = 1280;
+const static int32_t kWindowWidth = 640;
+const static int32_t kWindowHeight = 640;
 
-const static int32_t kGridSize = 320;
+const static int32_t kGridSize = 160;
 const static uint32_t kMazeWeight = 2;
 
-enum GridNode {
+enum GridState {
 	Empty = 0,
 	Collision,
 	Path

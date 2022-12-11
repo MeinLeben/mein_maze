@@ -1,0 +1,12 @@
+{
+	"files.associations": {
+		"chrono": "cpp",
+		"unordered_set": "cpp"
+	},
+	"files.exclude" : {
+		"external/SDL2*": true,
+		"external/SDL2_ttf*": true,
+		"external/cmake*": true,
+		"build*": true,
+	}
+}

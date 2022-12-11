@@ -1,32 +1,25 @@
 #pragma once
 
-#include "sdl_wrapper.h"
 #include "path_finder.h"
+#include "grid.h"
 
-class MeinMaze {
+class Maze {
 public:
-	MeinMaze();
-	~MeinMaze();
+	Maze();
 
-	int32_t Run();
+	void GenerateRandomPattern(uint8_t weight);
+	bool FindPath(const Int2& start, const Int2& destination);
+
+	const std::vector<Int2> GetPath() const {
+		return m_pathFinder->GetLastFoundPath();
+	}
+
+	const Grid* GetGrid() const {
+		return m_grid.get();
+	}
 
 private:
-
-	void Update();
-	void Render();
-
-	static void GenerateRandomPattern(const Int2& start, const Int2& destination, GridNode grid[][kGridSize], size_t size = kGridSize);
-
-	std::unique_ptr<SDLWrapper::Window> m_window;
-	std::unique_ptr<SDLWrapper::Renderer> m_renderer;
-
-	GridNode m_grid[kGridSize][kGridSize] = {};
-
-	Int2 m_start = { 0, 0 };
-	Int2 m_destination = { kGridSize - 1, kGridSize - 1 };
-
 	std::unique_ptr<PathFinder> m_pathFinder;
-
-	bool m_auto = false;
-	uint64_t m_numberOfFails = 0;
+	std::unique_ptr<Grid> m_grid;
+	std::unique_ptr<Grid> m_grids[2];
 };
