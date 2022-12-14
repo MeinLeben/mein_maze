@@ -22,6 +22,10 @@ void Maze::Update() {
 }
 
 void Maze::GenerateRandomPattern(uint8_t weight) {
+	if (!m_isFinished) {
+		return;
+	}
+
 	for (int32_t y = 0; y < kGridSize; y++) {
 		for (int32_t x = 0; x < kGridSize; x++) {
 			m_grid->SetState(x, y, (GridState)(rand() % weight == 0));

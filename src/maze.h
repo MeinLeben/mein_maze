@@ -14,7 +14,9 @@ public:
 	void FindPath(const Int2& start, const Int2& destination, std::function<void(bool)> callback);
 
 	inline void Clear() {
-		m_grid->Clear();
+		if (m_isFinished) {
+			m_grid->Clear();
+		}
 	}
 
 	inline bool IsSearching() const {
