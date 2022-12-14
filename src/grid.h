@@ -12,6 +12,10 @@ public:
 		delete[] m_pContainer;
 	}
 
+	void Clear() {
+		memset(m_pContainer, 0, sizeof(GridState) * m_width * m_height);
+	}
+
 	void SetState(uint32_t x, uint32_t y, const GridState& state) {
 		assert(y * m_width + x < m_width * m_height);
 		m_pContainer[y * m_width + x] = state;

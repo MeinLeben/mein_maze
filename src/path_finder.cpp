@@ -8,8 +8,16 @@ PathFinder::~PathFinder() {
 	Reset();
 }
 
-void PathFinder::Execute(const Int2& start, const Int2& destination, const Grid* pGrid, std::promise<bool>&& found) {
+void PathFinder::Execute(const Int2& start, const Int2& destination, const Grid* pGrid, std::function<void(bool)> callback) {
 	bool result = false;
+	m_path.clear();
+
+	if (pGrid->GetState(start.x, start.y) == GridState::Collision ||
+		pGrid->GetState(destination.x, destination.y) == GridState::Collision) {
+		callback(result);
+		return;
+	}
+
 	m_openList.insert(new Node{ nullptr, start, 0.0f, 0.0f, 0.0f });
 
 	while (!m_openList.empty()) {
@@ -93,7 +101,7 @@ void PathFinder::Execute(const Int2& start, const Int2& destination, const Grid*
 
 	Reset();
 
-	found.set_value(result);
+	callback(result);
 }
 
 void PathFinder::Reset() {

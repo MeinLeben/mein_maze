@@ -6,7 +6,7 @@ class PathFinder {
 public:
 	~PathFinder();
 
-	void Execute(const Int2& start, const Int2& destination, const Grid* pGrid, std::promise<bool>&& found);
+	void Execute(const Int2& start, const Int2& destination, const Grid* pGrid, std::function<void(bool)> callback);
 
 	const std::vector<Int2>& GetLastFoundPath() const {
 		return m_path;

@@ -3,6 +3,8 @@
 #include "mein_maze.h"
 #include "grid.h"
 
+static const std::string kTitle = "MeinMaze";
+
 MeinMaze::MeinMaze() {
 	std::srand(std::time(nullptr));
 
@@ -12,7 +14,7 @@ MeinMaze::MeinMaze() {
 
 	m_maze = std::make_unique<Maze>();
 
-	m_window = std::make_unique<SDLWrapper::Window>("MeinMaze", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, kWindowWidth, kWindowHeight, 0);
+	m_window = std::make_unique<SDLWrapper::Window>(kTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, kWindowWidth, kWindowHeight, 0);
 	m_renderer = std::make_unique<SDLWrapper::Renderer>(m_window->get(), -1, SDL_RENDERER_ACCELERATED);
 }
 
@@ -41,16 +43,30 @@ int32_t MeinMaze::Run() {
 				switch (event.key.keysym.scancode) {
 				case SDL_SCANCODE_ESCAPE:
 					return 0;
+				case SDL_SCANCODE_C:
+					m_maze->Clear();
+					m_isPathFound = false;
+					break;
 				case SDL_SCANCODE_SPACE:
 					m_auto = false;
-					m_maze->GenerateRandomPattern(kMazeWeight);
+					UpdateWindowTitle(kTitle);
+					if (!m_maze->IsSearching()) {
+						m_isPathFound = false;
+						m_maze->GenerateRandomPattern(kMazeWeight);
+					}
 					break;
 				case SDL_SCANCODE_RETURN: {
 					m_auto = false;
-					m_maze->FindPath(m_start, m_destination);
+					if (!m_maze->IsSearching()) {
+						m_maze->FindPath(m_start, m_destination, std::bind(&MeinMaze::OnFindPathFinished, this, std::placeholders::_1));
+					}
 				} break;
 				case SDL_SCANCODE_TAB:
-					m_auto = !m_auto;
+					if (!m_maze->IsSearching()) {
+						m_auto = true;
+						m_numberOfFails = 0;
+						m_isPathFound = false;
+					}
 					break;
 				default:
 					break;
@@ -60,23 +76,31 @@ int32_t MeinMaze::Run() {
 
 		Update();
 		Render();
-//		SDL_Delay(500);
 	}
 
 	return 0;
 }
 
 void MeinMaze::Update() {
-	if (m_auto) {
+	m_maze->Update();
+
+	if (m_maze->IsSearching()) {
+		UpdateWindowTitle("Searching...");
+	} else if (m_auto) {
 		m_maze->GenerateRandomPattern(kMazeWeight);
-		if (!m_maze->FindPath(m_start, m_destination)) {
-			m_numberOfFails++;
-			std::string title = "MeinMaze | Number of fails: " + std::to_string(m_numberOfFails);
-			SDL_SetWindowTitle(m_window->get(), title.c_str());
-		} else {
-			m_numberOfFails = 0;
-			m_auto = false;
-		}
+		m_maze->FindPath(m_start, m_destination, std::bind(&MeinMaze::OnFindPathFinished, this, std::placeholders::_1));
+	}
+}
+
+void MeinMaze::OnFindPathFinished(bool result) {
+	m_isPathFound = result;
+
+	UpdateWindowTitle("Path not found!");
+	if (result) {
+		UpdateWindowTitle(m_auto ? "Path found in " + std::to_string(m_numberOfFails) + " retries!" : "Path found!");
+		m_auto = false;
+	} else {
+		m_numberOfFails++;
 	}
 }
 
@@ -102,19 +126,17 @@ void MeinMaze::Render() {
 				SDL_SetRenderDrawColor(m_renderer->get(), 255, 255, 255, 255);
 				SDL_Rect rect = { x * cellSize + 1, y * cellSize + 1, cellSize - 2, cellSize - 2 };
 				SDL_RenderFillRect(m_renderer->get(), &rect);
-			} else if (pGrid->GetState(x, y) == GridState::Path) {
-				SDL_SetRenderDrawColor(m_renderer->get(), 255, 0, 0, 255);
-				SDL_Rect rect = { x * cellSize + 1, y * cellSize + 1, cellSize - 2, cellSize - 2 };
-				SDL_RenderFillRect(m_renderer->get(), &rect);
 			}
 		}
 	}
 
-	const std::vector<Int2>& path = m_maze->GetPath();
-	for (auto pos : path) {
-		SDL_SetRenderDrawColor(m_renderer->get(), 255, 0, 0, 255);
-		SDL_Rect rect = { pos.x * cellSize + 1, pos.y * cellSize + 1, cellSize - 2, cellSize - 2 };
-		SDL_RenderFillRect(m_renderer->get(), &rect);
+	if (m_isPathFound) {
+		const std::vector<Int2>& path = m_maze->GetPath();
+		for (auto pos : path) {
+			SDL_SetRenderDrawColor(m_renderer->get(), 255, 0, 0, 255);
+			SDL_Rect rect = { pos.x * cellSize + 1, pos.y * cellSize + 1, cellSize - 2, cellSize - 2 };
+			SDL_RenderFillRect(m_renderer->get(), &rect);
+		}
 	}
 
 	SDL_RenderPresent(m_renderer->get());

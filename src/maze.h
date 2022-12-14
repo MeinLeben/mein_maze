@@ -6,20 +6,39 @@
 class Maze {
 public:
 	Maze();
+	~Maze();
+
+	void Update();
 
 	void GenerateRandomPattern(uint8_t weight);
-	bool FindPath(const Int2& start, const Int2& destination);
+	void FindPath(const Int2& start, const Int2& destination, std::function<void(bool)> callback);
 
-	const std::vector<Int2> GetPath() const {
+	inline void Clear() {
+		m_grid->Clear();
+	}
+
+	inline bool IsSearching() const {
+		return !m_isFinished;
+	}
+
+	inline const std::vector<Int2> GetPath() const {
 		return m_pathFinder->GetLastFoundPath();
 	}
 
-	const Grid* GetGrid() const {
+	inline const Grid* GetGrid() const {
 		return m_grid.get();
 	}
 
 private:
+	void OnFindPathFinished(bool result);
+
+	std::thread m_pathFinderThread;
+
 	std::unique_ptr<PathFinder> m_pathFinder;
 	std::unique_ptr<Grid> m_grid;
-	std::unique_ptr<Grid> m_grids[2];
+	std::function<void(bool)> m_pathFinderCallback;
+
+	bool m_isFinished = true;
+	std::atomic<bool> m_onResult = false;
+	std::atomic<bool> m_result = false;
 };

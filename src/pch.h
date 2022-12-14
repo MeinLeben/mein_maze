@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <deque>
+#include <functional>
 #include <future>
 #include <iostream>
 #include <memory>
