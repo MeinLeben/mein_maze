@@ -6,6 +6,7 @@ public:
 		: m_width(width)
 		, m_height(height) {
 		m_pContainer = new GridState[width * height];
+		Clear();
 	}
 
 	~Grid() {

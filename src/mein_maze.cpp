@@ -23,65 +23,85 @@ MeinMaze::~MeinMaze() {
 }
 
 int32_t MeinMaze::Run() {
-	SDL_Event event = {};
-	while (true) {
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
-				return 0;
-			}
-
-			if (event.type == SDL_WINDOWEVENT) {
-				switch (event.window.type) {
-				case SDL_WINDOWEVENT_CLOSE:
-					return 0;
-				default:
-					break;
-				}
-			}
-
-			if (event.type == SDL_KEYUP) {
-				switch (event.key.keysym.scancode) {
-				case SDL_SCANCODE_ESCAPE:
-					return 0;
-				case SDL_SCANCODE_C:
-					m_maze->Clear();
-					m_isPathFound = false;
-					break;
-				case SDL_SCANCODE_SPACE:
-					m_auto = false;
-					UpdateWindowTitle(kTitle);
-					if (!m_maze->IsSearching()) {
-						m_isPathFound = false;
-						m_maze->GenerateRandomPattern(kMazeWeight);
-					}
-					break;
-				case SDL_SCANCODE_RETURN: {
-					m_auto = false;
-					if (!m_maze->IsSearching()) {
-						m_maze->FindPath(m_start, m_destination, std::bind(&MeinMaze::OnFindPathFinished, this, std::placeholders::_1));
-					}
-				} break;
-				case SDL_SCANCODE_TAB:
-					if (!m_maze->IsSearching()) {
-						m_auto = true;
-						m_numberOfFails = 0;
-						m_isPathFound = false;
-					}
-					break;
-				default:
-					break;
-				}
-			}
-		}
-
+	while (m_isRunning) {
 		Update();
 		Render();
 	}
 
-	return 0;
+	return m_exitCode;
 }
 
 void MeinMaze::Update() {
+	uint32_t mouseState = SDL_GetMouseState(&m_mousePosition.x, &m_mousePosition.y);
+	UpdateWindowTitle(std::to_string(m_mousePosition.x) + std::string(" ") + std::to_string(m_mousePosition.y));
+
+	SDL_Event event = {};
+	while (SDL_PollEvent(&event)) {
+		if (event.type == SDL_QUIT) {
+			Shutdown();
+			return;
+		}
+
+		if (event.type == SDL_WINDOWEVENT) {
+			switch (event.window.type) {
+			case SDL_WINDOWEVENT_CLOSE:
+				Shutdown();
+				return;
+			default:
+				break;
+			}
+		}
+
+		if (event.type == SDL_MOUSEBUTTONUP) {
+			if (event.button.button == SDL_BUTTON_LEFT) {
+				m_highlightColor = { 0, 192, 0 };
+			} else if (event.button.button == SDL_BUTTON_RIGHT) {
+			}
+		}
+
+		if (event.type == SDL_MOUSEBUTTONDOWN) {
+			if (event.button.button == SDL_BUTTON_LEFT) {
+				m_highlightColor = { 0, 128, 0 };
+			} else if (event.button.button == SDL_BUTTON_RIGHT) {
+			}
+		}
+
+		if (event.type == SDL_KEYUP) {
+			switch (event.key.keysym.scancode) {
+			case SDL_SCANCODE_ESCAPE:
+				Shutdown();
+				return;
+			case SDL_SCANCODE_C:
+				m_maze->Clear();
+				m_isPathFound = false;
+				break;
+			case SDL_SCANCODE_SPACE:
+				m_auto = false;
+				UpdateWindowTitle(kTitle);
+				if (!m_maze->IsSearching()) {
+					m_isPathFound = false;
+					m_maze->GenerateRandomPattern(kMazeWeight);
+				}
+				break;
+			case SDL_SCANCODE_RETURN: {
+				m_auto = false;
+				if (!m_maze->IsSearching()) {
+					m_maze->FindPath(m_start, m_destination, std::bind(&MeinMaze::OnFindPathFinished, this, std::placeholders::_1));
+				}
+			} break;
+			case SDL_SCANCODE_TAB:
+				if (!m_maze->IsSearching()) {
+					m_auto = true;
+					m_numberOfFails = 0;
+					m_isPathFound = false;
+				}
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
 	m_maze->Update();
 
 	if (m_maze->IsSearching()) {
@@ -124,7 +144,7 @@ void MeinMaze::Render() {
 		for (int32_t x = 0; x < kGridSize; x++) {
 			if (pGrid->GetState(x, y) == GridState::Collision) {
 				SDL_SetRenderDrawColor(m_renderer->get(), 255, 255, 255, 255);
-				SDL_Rect rect = { x * cellSize + 1, y * cellSize + 1, cellSize - 2, cellSize - 2 };
+				SDL_Rect rect = { x * cellSize + 1, y * cellSize + 1, cellSize - 1, cellSize - 1 };
 				SDL_RenderFillRect(m_renderer->get(), &rect);
 			}
 		}
@@ -134,10 +154,15 @@ void MeinMaze::Render() {
 		const std::vector<Int2>& path = m_maze->GetPath();
 		for (auto pos : path) {
 			SDL_SetRenderDrawColor(m_renderer->get(), 255, 0, 0, 255);
-			SDL_Rect rect = { pos.x * cellSize + 1, pos.y * cellSize + 1, cellSize - 2, cellSize - 2 };
+			SDL_Rect rect = { pos.x * cellSize + 1, pos.y * cellSize + 1, cellSize - 1, cellSize - 1 };
 			SDL_RenderFillRect(m_renderer->get(), &rect);
 		}
 	}
 
+	const int32_t x = ((m_mousePosition.x - 2) / cellSize) * cellSize;
+	const int32_t y = ((m_mousePosition.y - 3) / cellSize) * cellSize;
+	SDL_SetRenderDrawColor(m_renderer->get(), m_highlightColor.x, m_highlightColor.y, m_highlightColor.z, 255);
+	const SDL_Rect rect = {x + 1, y + 1, cellSize - 1, cellSize - 1};
+	SDL_RenderFillRect(m_renderer->get(), &rect);
 	SDL_RenderPresent(m_renderer->get());
 }
