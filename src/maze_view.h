@@ -16,8 +16,8 @@ public:
 protected:
 	virtual void HandleEvent(SDL_Event& event) override;
 
-	virtual void Update();
-	virtual void Render();
+	virtual void Update() override;
+	virtual void Render() override;
 
 private:
 	Maze* m_pMaze = nullptr;
