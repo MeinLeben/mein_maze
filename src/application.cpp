@@ -17,7 +17,10 @@ Application::Application(int32_t argc, char* argv[]) {
 	m_mazeView = std::make_unique<MazeView>(m_maze.get());
 	m_mazeView->RegisterOnClose(std::bind(&Application::OnViewClose, this));
 
-	m_gameView = std::make_unique<GameView>();
+	const int32_t x = m_mazeView->GetPosition().x + m_mazeView->GetSize().x + 10;
+	const int32_t y = m_mazeView->GetPosition().y;
+
+	m_gameView = std::make_unique<GameView>(x, y);
 	m_gameView->RegisterOnClose(std::bind(&Application::OnViewClose, this));
 }
 

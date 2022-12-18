@@ -6,6 +6,7 @@ class Maze;
 
 class MazeView : public View {
 public:
+	MazeView(int32_t x, int32_t y, Maze* pMaze);
 	MazeView(Maze* pMaze);
 
 	inline void ShowPath(bool show) {

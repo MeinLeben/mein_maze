@@ -6,6 +6,8 @@
 class View : public EventHandler {
 public:
 	View(const std::string& title, int32_t width, int32_t height);
+	View(const std::string& title, int32_t x, int32_t y, int32_t width, int32_t height);
+
 	virtual ~View();
 
 	inline void Show(bool show) {
@@ -35,6 +37,18 @@ public:
 
 	void RegisterOnClose(std::function<void()> callback) {
 		m_onCloseCallback = callback;
+	}
+
+	Int2 GetPosition() const {
+		Int2 position;
+		SDL_GetWindowPosition(m_window->get(), &position.x, &position.y);
+		return position;
+	}
+
+	Int2 GetSize() const {
+		Int2 size;
+		SDL_GetWindowSize(m_window->get(), &size.x, &size.y);
+		return size;
 	}
 
 protected:

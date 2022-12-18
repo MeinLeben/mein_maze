@@ -4,7 +4,7 @@
 
 class GameView : public View{
 public:
-	GameView();
+	GameView(int32_t x, int32_t y);
 
 protected:
 	virtual void HandleEvent(SDL_Event& event) override;

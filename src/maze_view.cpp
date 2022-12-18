@@ -4,8 +4,18 @@
 
 #include "maze.h"
 
+const static std::string kTitle = "Mein Maze";
+
+const static int32_t kWindowWidth = 640;
+const static int32_t kWindowHeight = 640;
+
 MazeView::MazeView(Maze* pMaze) 
-	: View(kTitle, kWindowWidth, kWindowHeight)
+	: View(kTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, kWindowWidth, kWindowHeight)
+	, m_pMaze(pMaze) {
+}
+
+MazeView::MazeView(int32_t x, int32_t y, Maze* pMaze) 
+	: View(kTitle, x, y, kWindowWidth, kWindowHeight)
 	, m_pMaze(pMaze) {
 }
 
@@ -14,6 +24,11 @@ void MazeView::HandleEvent(SDL_Event& event) {
 
 	if (event.window.windowID != SDL_GetWindowID(GetWindow())) {
 		return;
+	}
+
+	if (event.type == SDL_MOUSEMOTION) {
+		m_mousePosition.x = event.motion.x;
+		m_mousePosition.y = event.motion.y;
 	}
 
 	if (event.type == SDL_MOUSEBUTTONUP) {
@@ -32,8 +47,6 @@ void MazeView::HandleEvent(SDL_Event& event) {
 }
 
 void MazeView::Update() {
-	uint32_t mouseState = SDL_GetMouseState(&m_mousePosition.x, &m_mousePosition.y);
-	//UpdateWindowTitle(std::to_string(m_mousePosition.x) + std::string(" ") + std::to_string(m_mousePosition.y));
 
 }
 
