@@ -11,4 +11,8 @@ protected:
 
 	virtual void Update();
 	virtual void Render();
+
+private:
+	Float2 m_playerPosition = {};
+	float m_playerAngle = 0;
 };

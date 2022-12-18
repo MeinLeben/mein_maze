@@ -16,3 +16,7 @@ struct Int2 {
 struct Int3 {
 	int32_t x, y, z;
 };
+
+struct Float2 {
+	float x, y;
+};

@@ -16,6 +16,8 @@ protected:
 	virtual void HandleEvent(SDL_Event& event);
 
 private:
+	void UpdateMaze();
+
 	void OnFindPathFinished(bool result);
 	void OnViewClose();
 
@@ -23,17 +25,16 @@ private:
 		m_exitCode = exitCode;
 		m_isRunning = false;
 	}
+
+	int32_t m_exitCode = 0;
+	bool m_isRunning = true;
+
 	std::unique_ptr<Maze> m_maze;
 	std::unique_ptr<MazeView> m_mazeView;
 	std::unique_ptr<GameView> m_gameView;
 
 	Int2 m_start = { 0, 0 };
 	Int2 m_destination = { kGridSize - 1, kGridSize - 1 };
-
 	uint64_t m_numberOfFails = 0;
-
-	int32_t m_exitCode = 0;
-	bool m_isRunning = true;
-
 	bool m_auto = false;
 };

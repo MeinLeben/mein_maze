@@ -3,6 +3,7 @@
 #include "application.h"
 
 #include "grid.h"
+#include "time.h"
 
 Application::Application(int32_t argc, char* argv[]) {
 	std::srand(std::time(nullptr));
@@ -32,18 +33,11 @@ Application::~Application() {
 
 int32_t Application::Run() {
 	while (m_isRunning) {
+		Time::Get().Update();
+
 		EventManager::Get().Update();
-		
-		m_maze->Update();
-
-		if (m_maze->IsSearching()) {
-			m_mazeView->UpdateWindowTitle("Searching...");
-		}
-
-		if (!m_maze->IsSearching() && m_auto) {
-			m_maze->GenerateRandomPattern(kMazeWeight);
-			m_maze->FindPath(m_start, m_destination, std::bind(&Application::OnFindPathFinished, this, std::placeholders::_1));
-		}
+	
+		UpdateMaze();
 
 		ViewManager::Get().Update();
 		ViewManager::Get().Render();
@@ -90,6 +84,19 @@ void Application::HandleEvent(SDL_Event& event) {
 		default:
 			break;
 		}
+	}
+}
+
+void Application::UpdateMaze() {
+	m_maze->Update();
+
+	if (m_maze->IsSearching()) {
+		m_mazeView->UpdateWindowTitle("Searching...");
+	}
+
+	if (!m_maze->IsSearching() && m_auto) {
+		m_maze->GenerateRandomPattern(kMazeWeight);
+		m_maze->FindPath(m_start, m_destination, std::bind(&Application::OnFindPathFinished, this, std::placeholders::_1));
 	}
 }
 
