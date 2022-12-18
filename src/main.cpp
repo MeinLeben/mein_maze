@@ -1,8 +1,8 @@
 #include "pch.h"
 
-#include "mein_maze.h"
+#include "application.h"
 
 int32_t main(int32_t argc, char* argv[]) {
-	std::unique_ptr<MeinMaze> maze = std::make_unique<MeinMaze>();
-	return maze->Run();
+	std::unique_ptr<Application> application = std::make_unique<Application>(argc, argv);
+	return application->Run();
 }

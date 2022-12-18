@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "event.h"
 
 EventManager EventManager::ms_instance;

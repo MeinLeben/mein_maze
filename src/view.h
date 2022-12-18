@@ -29,9 +29,18 @@ public:
 		return SDL_GetWindowID(m_window->get());
 	}
 
-protected:
-	virtual void Update() = 0;
+	inline void UpdateWindowTitle(const std::string& title) {
+		SDL_SetWindowTitle(m_window->get(), title.c_str());
+	}
 
+	void RegisterOnClose(std::function<void()> callback) {
+		m_onCloseCallback = callback;
+	}
+
+protected:
+	virtual void HandleEvent(SDL_Event& event);
+
+	virtual void Update() = 0;
 	virtual void Render() = 0;
 
 	inline SDL_Window* GetWindow() const {
@@ -45,6 +54,8 @@ protected:
 private:
 	std::unique_ptr<SDLWrapper::Window> m_window;
 	std::unique_ptr<SDLWrapper::Renderer> m_renderer;
+
+	std::function<void()> m_onCloseCallback;
 
 	bool m_isVisible = true;
 

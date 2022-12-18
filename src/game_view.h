@@ -2,12 +2,12 @@
 
 #include "view.h"
 
-class Maze2d : public View {
+class GameView : public View{
 public:
-	Maze2d();
+	GameView();
 
 protected:
-	virtual void HandleEvent(SDL_Event& event);
+	virtual void HandleEvent(SDL_Event& event) override;
 
 	virtual void Update();
 	virtual void Render();

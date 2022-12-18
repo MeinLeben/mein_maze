@@ -24,6 +24,24 @@ View::~View() {
 	ViewManager::Get().DeRegister(this);
 }
 
+void View::HandleEvent(SDL_Event& event) {
+	if (event.window.windowID != SDL_GetWindowID(GetWindow())) {
+		return;
+	}
+
+	if (event.type == SDL_WINDOWEVENT) {
+		switch (event.window.event) {
+		case SDL_WINDOWEVENT_CLOSE:
+			if (m_onCloseCallback) {
+				m_onCloseCallback();
+			}
+			return;
+		default:
+			break;
+		}
+	}
+}
+
 void ViewManager::Update() {
 	for (auto view : m_views) {
 		view->Update();

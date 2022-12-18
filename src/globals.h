@@ -1,5 +1,7 @@
 #pragma once
 
+const static std::string kTitle = "Mein Maze";
+
 const static int32_t kWindowWidth = 640;
 const static int32_t kWindowHeight = 640;
 
