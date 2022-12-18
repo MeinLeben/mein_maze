@@ -16,6 +16,7 @@ protected:
 	virtual void HandleEvent(SDL_Event& event);
 
 private:
+	void UpdateGame();
 	void UpdateMaze();
 
 	void OnFindPathFinished(bool result);
@@ -37,4 +38,8 @@ private:
 	Int2 m_destination = { kGridSize - 1, kGridSize - 1 };
 	uint64_t m_numberOfFails = 0;
 	bool m_auto = false;
+
+	Float2 m_playerPosition = {};
+	float m_playerAngle = 0;
+	bool m_playerIsRunning = false;
 };

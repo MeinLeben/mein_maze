@@ -18,11 +18,16 @@ Application::Application(int32_t argc, char* argv[]) {
 	m_mazeView = std::make_unique<MazeView>(m_maze.get());
 	m_mazeView->RegisterOnClose(std::bind(&Application::OnViewClose, this));
 
+	m_playerPosition.x = m_mazeView->GetCellSize() / 2.0f;
+	m_playerPosition.y = m_mazeView->GetCellSize() / 2.0f;
+
 	const int32_t x = m_mazeView->GetPosition().x + m_mazeView->GetSize().x + 10;
 	const int32_t y = m_mazeView->GetPosition().y;
 
 	m_gameView = std::make_unique<GameView>(x, y);
 	m_gameView->RegisterOnClose(std::bind(&Application::OnViewClose, this));
+
+	m_mazeView->Raise();
 }
 
 Application::~Application() {
@@ -36,7 +41,8 @@ int32_t Application::Run() {
 		Time::Get().Update();
 
 		EventManager::Get().Update();
-	
+
+		UpdateGame();
 		UpdateMaze();
 
 		ViewManager::Get().Update();
@@ -50,6 +56,16 @@ void Application::HandleEvent(SDL_Event& event) {
 	if (event.type == SDL_QUIT) {
 		Shutdown();
 		return;
+	}
+
+	if (event.type == SDL_KEYDOWN) {
+		switch (event.key.keysym.scancode) {
+		case SDL_SCANCODE_LSHIFT:
+			m_playerIsRunning = true;
+			break;
+		default:
+			break;
+		}
 	}
 
 	if (event.type == SDL_KEYUP) {
@@ -81,10 +97,42 @@ void Application::HandleEvent(SDL_Event& event) {
 				m_numberOfFails = 0;
 			}
 			break;
+		case SDL_SCANCODE_LSHIFT:
+			m_playerIsRunning = false;
+			break;
 		default:
 			break;
 		}
 	}
+}
+
+void Application::UpdateGame() {
+	float deltaTime = Time::Get().GetDeltaTime();
+	int32_t numKeys = 0;
+	const uint8_t* pKeyboardState = SDL_GetKeyboardState(&numKeys);
+
+	const float speed = m_playerIsRunning ? kPlayerRunSpeed : kPlayerWalkSpeed;
+	if (pKeyboardState[SDL_SCANCODE_W] || pKeyboardState[SDL_SCANCODE_UP]) {
+		m_playerPosition.x += cosf(m_playerAngle) * speed * deltaTime;
+		m_playerPosition.y += sinf(m_playerAngle) * speed * deltaTime;
+	}
+
+	if (pKeyboardState[SDL_SCANCODE_S] || pKeyboardState[SDL_SCANCODE_DOWN]) {
+		m_playerPosition.x -= cosf(m_playerAngle) * speed * deltaTime;
+		m_playerPosition.y -= sinf(m_playerAngle) * speed * deltaTime;
+	}
+
+	if (pKeyboardState[SDL_SCANCODE_A] || pKeyboardState[SDL_SCANCODE_LEFT]) {
+		m_playerAngle -= kPlayerRotationSpeed * deltaTime;
+	}
+
+	if (pKeyboardState[SDL_SCANCODE_D] || pKeyboardState[SDL_SCANCODE_RIGHT]) {
+		m_playerAngle += kPlayerRotationSpeed * deltaTime;
+	}
+
+	m_mazeView->SetPlayerPosition(m_playerPosition);
+	m_mazeView->SetPlayerAngle(m_playerAngle);
+	m_mazeView->ShowPlayer(true);
 }
 
 void Application::UpdateMaze() {

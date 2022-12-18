@@ -11,8 +11,4 @@ protected:
 
 	virtual void Update() override;
 	virtual void Render() override;
-
-private:
-	Float2 m_playerPosition = {};
-	float m_playerAngle = 0;
 };
