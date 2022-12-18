@@ -1,15 +1,19 @@
 #pragma once
 
+#include "event.h"
+#include "maze.h"
+#include "maze_2d.h"
 #include "sdl_wrapper.h"
 
-#include "maze.h"
-
-class MeinMaze {
+class MeinMaze : public EventHandler {
 public:
 	MeinMaze();
 	~MeinMaze();
 
 	int32_t Run();
+
+protected:
+	virtual void HandleEvent(SDL_Event& event);
 
 private:
 	void Update();
@@ -26,6 +30,7 @@ private:
 		m_isRunning = false;
 	}
 
+	std::unique_ptr<Maze2d> m_maze2d;
 	std::unique_ptr<Maze> m_maze;
 
 	std::unique_ptr<SDLWrapper::Window> m_window;

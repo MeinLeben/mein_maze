@@ -1,7 +1,9 @@
 #include "pch.h"
 
 #include "mein_maze.h"
+
 #include "grid.h"
+#include "view.h"
 
 static const std::string kTitle = "MeinMaze";
 
@@ -12,95 +14,103 @@ MeinMaze::MeinMaze() {
 		throw std::runtime_error(SDL_GetError());
 	}
 
-	m_maze = std::make_unique<Maze>();
+	EventManager::Get().Register(this);
 
+	m_maze = std::make_unique<Maze>();
+	m_maze2d = std::make_unique<Maze2d>();
 	m_window = std::make_unique<SDLWrapper::Window>(kTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, kWindowWidth, kWindowHeight, 0);
 	m_renderer = std::make_unique<SDLWrapper::Renderer>(m_window->get(), -1, SDL_RENDERER_ACCELERATED);
+
+	m_maze2d->Show(true);
 }
 
 MeinMaze::~MeinMaze() {
+	EventManager::Get().DeRegister(this);
+
 	SDL_Quit();
 }
 
 int32_t MeinMaze::Run() {
 	while (m_isRunning) {
+		EventManager::Get().Update();
+		ViewManager::Get().Update();
 		Update();
+		ViewManager::Get().Render();
 		Render();
 	}
 
 	return m_exitCode;
 }
 
-void MeinMaze::Update() {
-	uint32_t mouseState = SDL_GetMouseState(&m_mousePosition.x, &m_mousePosition.y);
-	UpdateWindowTitle(std::to_string(m_mousePosition.x) + std::string(" ") + std::to_string(m_mousePosition.y));
+void MeinMaze::HandleEvent(SDL_Event& event) {
+	if (event.type == SDL_QUIT) {
+		Shutdown();
+		return;
+	}
 
-	SDL_Event event = {};
-	while (SDL_PollEvent(&event)) {
-		if (event.type == SDL_QUIT) {
+	if (event.type == SDL_WINDOWEVENT) {
+		switch (event.window.type) {
+		case SDL_WINDOWEVENT_CLOSE:
 			Shutdown();
 			return;
-		}
-
-		if (event.type == SDL_WINDOWEVENT) {
-			switch (event.window.type) {
-			case SDL_WINDOWEVENT_CLOSE:
-				Shutdown();
-				return;
-			default:
-				break;
-			}
-		}
-
-		if (event.type == SDL_MOUSEBUTTONUP) {
-			if (event.button.button == SDL_BUTTON_LEFT) {
-				m_highlightColor = { 0, 192, 0 };
-			} else if (event.button.button == SDL_BUTTON_RIGHT) {
-			}
-		}
-
-		if (event.type == SDL_MOUSEBUTTONDOWN) {
-			if (event.button.button == SDL_BUTTON_LEFT) {
-				m_highlightColor = { 0, 128, 0 };
-			} else if (event.button.button == SDL_BUTTON_RIGHT) {
-			}
-		}
-
-		if (event.type == SDL_KEYUP) {
-			switch (event.key.keysym.scancode) {
-			case SDL_SCANCODE_ESCAPE:
-				Shutdown();
-				return;
-			case SDL_SCANCODE_C:
-				m_maze->Clear();
-				m_isPathFound = false;
-				break;
-			case SDL_SCANCODE_SPACE:
-				m_auto = false;
-				UpdateWindowTitle(kTitle);
-				if (!m_maze->IsSearching()) {
-					m_isPathFound = false;
-					m_maze->GenerateRandomPattern(kMazeWeight);
-				}
-				break;
-			case SDL_SCANCODE_RETURN: {
-				m_auto = false;
-				if (!m_maze->IsSearching()) {
-					m_maze->FindPath(m_start, m_destination, std::bind(&MeinMaze::OnFindPathFinished, this, std::placeholders::_1));
-				}
-			} break;
-			case SDL_SCANCODE_TAB:
-				if (!m_maze->IsSearching()) {
-					m_auto = true;
-					m_numberOfFails = 0;
-					m_isPathFound = false;
-				}
-				break;
-			default:
-				break;
-			}
+		default:
+			break;
 		}
 	}
+
+	if (event.type == SDL_MOUSEBUTTONUP) {
+		if (event.button.button == SDL_BUTTON_LEFT) {
+			m_highlightColor = { 0, 192, 0 };
+		} else if (event.button.button == SDL_BUTTON_RIGHT) {
+		}
+	}
+
+	if (event.type == SDL_MOUSEBUTTONDOWN) {
+		if (event.button.button == SDL_BUTTON_LEFT) {
+			m_highlightColor = { 0, 128, 0 };
+		} else if (event.button.button == SDL_BUTTON_RIGHT) {
+		}
+	}
+
+	if (event.type == SDL_KEYUP) {
+		switch (event.key.keysym.scancode) {
+		case SDL_SCANCODE_ESCAPE:
+			Shutdown();
+			return;
+		case SDL_SCANCODE_C:
+			m_maze->Clear();
+			m_isPathFound = false;
+			break;
+		case SDL_SCANCODE_SPACE:
+			m_auto = false;
+			UpdateWindowTitle(kTitle);
+			if (!m_maze->IsSearching()) {
+				m_isPathFound = false;
+				m_maze->GenerateRandomPattern(kMazeWeight);
+			}
+			break;
+		case SDL_SCANCODE_RETURN: {
+			m_auto = false;
+			if (!m_maze->IsSearching()) {
+				m_maze->FindPath(m_start, m_destination, std::bind(&MeinMaze::OnFindPathFinished, this, std::placeholders::_1));
+			}
+		} break;
+		case SDL_SCANCODE_TAB:
+			if (!m_maze->IsSearching()) {
+				m_auto = true;
+				m_numberOfFails = 0;
+				m_isPathFound = false;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void MeinMaze::Update() {
+	uint32_t mouseState = SDL_GetMouseState(&m_mousePosition.x, &m_mousePosition.y);
+	//UpdateWindowTitle(std::to_string(m_mousePosition.x) + std::string(" ") + std::to_string(m_mousePosition.y));
 
 	m_maze->Update();
 
