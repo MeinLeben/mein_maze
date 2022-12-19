@@ -36,6 +36,8 @@ protected:
 	virtual void Render() override;
 
 private:
+	void RenderRaycaster(SDL_Renderer* pRenderer);
+
 	const static int32_t kWindowWidth = 640;
 	const static int32_t kWindowHeight = 640;
 

@@ -85,7 +85,8 @@ void MazeView::Render() {
 	}
 
 	if (m_showPlayer) {
-		float distance = 320.0f;
+		/*
+		float distance = 1280.0f;
 		float angle = Deg2Rad(30);
 		const float x2 = m_playerPosition.x + distance * cosf(m_playerAngle - angle);
 		const float y2 = m_playerPosition.y + distance * sinf(m_playerAngle - angle);
@@ -94,11 +95,13 @@ void MazeView::Render() {
 
 		SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
 		SDL_RenderFillTriangle(pRenderer, m_playerPosition.x, m_playerPosition.y, x2, y2, x3, y3);
+		*/
+		RenderRaycaster(pRenderer);
 
 		SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
 		SDL_RenderFillCircle(pRenderer, m_playerPosition.x, m_playerPosition.y, 16);
 
-		distance = 32.0f;
+		float distance = 32.0f;
 		const float x = m_playerPosition.x + distance * cosf(m_playerAngle);
 		const float y = m_playerPosition.y + distance * sinf(m_playerAngle);
 		SDL_RenderDrawLine(pRenderer, m_playerPosition.x, m_playerPosition.y, x, y);
@@ -110,4 +113,30 @@ void MazeView::Render() {
 	const SDL_Rect rect = {x + 1, y + 1, cellSize - 1, cellSize - 1};
 	SDL_RenderFillRect(pRenderer, &rect);
 	SDL_RenderPresent(pRenderer);
+}
+
+void MazeView::RenderRaycaster(SDL_Renderer* pRenderer) {
+/*
+	const float kFOV = 60;
+	const Float2 kProjectionPlane = { 320, 200 };
+	const Float2 kProjectionPlaneCenter = { kProjectionPlane.x * 0.5f, kProjectionPlane.y * 0.5f };
+	const float kProjectionPlaneDistance = (kProjectionPlane.x * 0.5f) / tanf(Deg2Rad(kFOV * 0.5f));
+	const float kDeltaAngle = kFOV / kProjectionPlane.x;
+	const float kYa = kWindowWidth / kGridSize;
+
+	SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
+	for (int32_t x = 0; x < kProjectionPlane.x; x++) {
+		float newXa = m_playerPosition.x; float newYa = m_playerPosition.y;
+		while (true) {
+			newXa += kYa / tanf(m_playerAngle + Deg2Rad(kDeltaAngle * (x - 160)));
+			newYa += kYa;
+
+			if (newXa > kWindowWidth || newYa > kWindowHeight) {
+				break;
+			}
+		}
+
+		SDL_RenderDrawLine(pRenderer, m_playerPosition.x, m_playerPosition.y, newXa, newYa);
+	}
+*/
 }
