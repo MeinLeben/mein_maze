@@ -85,6 +85,9 @@ void MazeView::Render() {
 	}
 
 	if (m_showPlayer) {
+		SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
+		SDL_RenderFillTriangle(pRenderer, m_playerPosition.x, m_playerPosition.y, kWindowWidth, 0, kWindowWidth - 50, kWindowHeight - 50);
+
 		SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
 		SDL_RenderFillCircle(pRenderer, m_playerPosition.x, m_playerPosition.y, 16);
 
