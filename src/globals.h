@@ -1,5 +1,6 @@
 #pragma once
 
+const static float PI = 3.14159265359f;
 const static int32_t kGridSize = 10;
 const static uint32_t kMazeWeight = 2;
 
@@ -24,3 +25,7 @@ struct Int3 {
 struct Float2 {
 	float x, y;
 };
+
+inline float Deg2Rad(float deg) {
+	return deg * PI / 180.0f;
+}

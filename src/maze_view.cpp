@@ -85,16 +85,23 @@ void MazeView::Render() {
 	}
 
 	if (m_showPlayer) {
+		float distance = 320.0f;
+		float angle = Deg2Rad(30);
+		const float x2 = m_playerPosition.x + distance * cosf(m_playerAngle - angle);
+		const float y2 = m_playerPosition.y + distance * sinf(m_playerAngle - angle);
+		const float x3 = m_playerPosition.x + distance * cosf(m_playerAngle + angle);
+		const float y3 = m_playerPosition.y + distance * sinf(m_playerAngle + angle);
+
 		SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
-		SDL_RenderFillTriangle(pRenderer, m_playerPosition.x, m_playerPosition.y, kWindowWidth, 0, kWindowWidth - 50, kWindowHeight - 50);
+		SDL_RenderFillTriangle(pRenderer, m_playerPosition.x, m_playerPosition.y, x2, y2, x3, y3);
 
 		SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
 		SDL_RenderFillCircle(pRenderer, m_playerPosition.x, m_playerPosition.y, 16);
 
-		const float distance = 32.0f;
-		const float x = distance * cosf(m_playerAngle);
-		const float y = distance * sinf(m_playerAngle);
-		SDL_RenderDrawLine(pRenderer, m_playerPosition.x, m_playerPosition.y, m_playerPosition.x + x, m_playerPosition.y + y);
+		distance = 32.0f;
+		const float x = m_playerPosition.x + distance * cosf(m_playerAngle);
+		const float y = m_playerPosition.y + distance * sinf(m_playerAngle);
+		SDL_RenderDrawLine(pRenderer, m_playerPosition.x, m_playerPosition.y, x, y);
 	}
 
 	const int32_t x = ((m_mousePosition.x - 2) / cellSize) * cellSize;
