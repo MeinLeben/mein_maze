@@ -13,18 +13,22 @@ public:
 		delete[] m_pContainer;
 	}
 
-	void Clear() {
+	inline void Clear() {
 		memset(m_pContainer, 0, sizeof(GridState) * m_width * m_height);
 	}
 
-	void SetState(uint32_t x, uint32_t y, const GridState& state) {
+	inline void SetState(uint32_t x, uint32_t y, const GridState& state) {
 		assert(y * m_width + x < m_width * m_height);
 		m_pContainer[y * m_width + x] = state;
 	}
 
-	const GridState& GetState(uint32_t x, uint32_t y) const {
+	inline const GridState& GetState(uint32_t x, uint32_t y) const {
 		assert(y * m_width + x < m_width * m_height);
 		return m_pContainer[y * m_width + x];
+	}
+
+	inline const GridState& GetState(Int2 position) const {
+		return GetState(position.x, position.y);
 	}
 
 private:

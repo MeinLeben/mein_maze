@@ -18,8 +18,8 @@ Application::Application(int32_t argc, char* argv[]) {
 	m_mazeView = std::make_unique<MazeView>(m_maze.get());
 	m_mazeView->RegisterOnClose(std::bind(&Application::OnViewClose, this));
 
-	m_playerPosition.x = m_mazeView->GetCellSize() / 2.0f;
-	m_playerPosition.y = m_mazeView->GetCellSize() / 2.0f;
+	m_playerPosition.x = m_mazeView->GetTileSize() / 2.0f;
+	m_playerPosition.y = m_mazeView->GetTileSize() / 2.0f;
 
 	const int32_t x = m_mazeView->GetPosition().x + m_mazeView->GetSize().x + 10;
 	const int32_t y = m_mazeView->GetPosition().y;

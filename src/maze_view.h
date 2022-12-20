@@ -25,7 +25,7 @@ public:
 		m_playerAngle = angle;
 	}
 
-	inline int32_t GetCellSize() const {
+	inline int32_t GetTileSize() const {
 		return kWindowHeight / kGridSize;
 	}
 
@@ -36,7 +36,7 @@ protected:
 	virtual void Render() override;
 
 private:
-	void RenderRaycaster(SDL_Renderer* pRenderer);
+	void RenderRaycaster(SDL_Renderer* pRenderer, const Maze* pMaze);
 
 	const static int32_t kWindowWidth = 640;
 	const static int32_t kWindowHeight = 640;

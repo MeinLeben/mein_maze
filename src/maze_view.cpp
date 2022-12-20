@@ -7,6 +7,9 @@
 
 const static std::string kTitle = "Mein Maze";
 
+const static float kFOV = 60.0f;
+const static Float2 kProjectionPlane = { 320.0f, 200.0f };
+
 MazeView::MazeView(Maze* pMaze) 
 	: View(kTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, kWindowWidth, kWindowHeight)
 	, m_pMaze(pMaze) {
@@ -56,10 +59,10 @@ void MazeView::Render() {
 	SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
 
 	const int32_t numLines = kGridSize + 1;
-	const int32_t cellSize = GetCellSize();
+	const int32_t tileSize = GetTileSize();
 
 	for (int32_t l = 0; l < numLines; l++) {
-		int32_t lineOffset = l * cellSize;
+		int32_t lineOffset = l * tileSize;
 		SDL_RenderDrawLine(pRenderer, lineOffset, 0, lineOffset, kWindowHeight);
 		SDL_RenderDrawLine(pRenderer, 0, lineOffset, kWindowHeight, lineOffset);
 	}
@@ -69,7 +72,7 @@ void MazeView::Render() {
 		for (int32_t x = 0; x < kGridSize; x++) {
 			if (pGrid->GetState(x, y) == GridState::Collision) {
 				SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 255);
-				SDL_Rect rect = { x * cellSize + 1, y * cellSize + 1, cellSize - 1, cellSize - 1 };
+				SDL_Rect rect = { x * tileSize + 1, y * tileSize + 1, tileSize - 1, tileSize - 1 };
 				SDL_RenderFillRect(pRenderer, &rect);
 			}
 		}
@@ -79,24 +82,13 @@ void MazeView::Render() {
 		const std::vector<Int2>& path = m_pMaze->GetPath();
 		for (auto pos : path) {
 			SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
-			SDL_Rect rect = { pos.x * cellSize + 1, pos.y * cellSize + 1, cellSize - 1, cellSize - 1 };
+			SDL_Rect rect = { pos.x * tileSize + 1, pos.y * tileSize + 1, tileSize - 1, tileSize - 1 };
 			SDL_RenderFillRect(pRenderer, &rect);
 		}
 	}
 
 	if (m_showPlayer) {
-		/*
-		float distance = 1280.0f;
-		float angle = Deg2Rad(30);
-		const float x2 = m_playerPosition.x + distance * cosf(m_playerAngle - angle);
-		const float y2 = m_playerPosition.y + distance * sinf(m_playerAngle - angle);
-		const float x3 = m_playerPosition.x + distance * cosf(m_playerAngle + angle);
-		const float y3 = m_playerPosition.y + distance * sinf(m_playerAngle + angle);
-
-		SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
-		SDL_RenderFillTriangle(pRenderer, m_playerPosition.x, m_playerPosition.y, x2, y2, x3, y3);
-		*/
-		RenderRaycaster(pRenderer);
+		RenderRaycaster(pRenderer, m_pMaze);
 
 		SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
 		SDL_RenderFillCircle(pRenderer, m_playerPosition.x, m_playerPosition.y, 16);
@@ -107,36 +99,51 @@ void MazeView::Render() {
 		SDL_RenderDrawLine(pRenderer, m_playerPosition.x, m_playerPosition.y, x, y);
 	}
 
-	const int32_t x = ((m_mousePosition.x - 2) / cellSize) * cellSize;
-	const int32_t y = ((m_mousePosition.y - 3) / cellSize) * cellSize;
+	const int32_t x = ((m_mousePosition.x - 2) / tileSize) * tileSize;
+	const int32_t y = ((m_mousePosition.y - 3) / tileSize) * tileSize;
 	SDL_SetRenderDrawColor(pRenderer, m_highlightColor.x, m_highlightColor.y, m_highlightColor.z, 255);
-	const SDL_Rect rect = {x + 1, y + 1, cellSize - 1, cellSize - 1};
+	const SDL_Rect rect = {x + 1, y + 1, tileSize - 1, tileSize - 1};
 	SDL_RenderFillRect(pRenderer, &rect);
 	SDL_RenderPresent(pRenderer);
 }
 
-void MazeView::RenderRaycaster(SDL_Renderer* pRenderer) {
-/*
-	const float kFOV = 60;
-	const Float2 kProjectionPlane = { 320, 200 };
-	const Float2 kProjectionPlaneCenter = { kProjectionPlane.x * 0.5f, kProjectionPlane.y * 0.5f };
-	const float kProjectionPlaneDistance = (kProjectionPlane.x * 0.5f) / tanf(Deg2Rad(kFOV * 0.5f));
-	const float kDeltaAngle = kFOV / kProjectionPlane.x;
-	const float kYa = kWindowWidth / kGridSize;
+void MazeView::RenderRaycaster(SDL_Renderer* pRenderer, const Maze* pMaze) {
+	const float kMapHeight = kWindowHeight;
+	const float kMapWidth = kWindowHeight;
+	const float kTileSize = kMapHeight / kGridSize;
+	const float kDepth = sqrtf((kWindowHeight * kWindowHeight) + (kWindowHeight * kWindowHeight));
 
-	SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
+	const Grid* pGrid = pMaze->GetGrid();
+
+	float startAngle = Rad2Deg(m_playerAngle) - kFOV * 0.5f;
 	for (int32_t x = 0; x < kProjectionPlane.x; x++) {
-		float newXa = m_playerPosition.x; float newYa = m_playerPosition.y;
-		while (true) {
-			newXa += kYa / tanf(m_playerAngle + Deg2Rad(kDeltaAngle * (x - 160)));
-			newYa += kYa;
+		const float rayAngle = Deg2Rad(startAngle + (kFOV / kProjectionPlane.x) * x);
+		const Float2 eye = { cosf(rayAngle), sinf(rayAngle) };
 
-			if (newXa > kWindowWidth || newYa > kWindowHeight) {
+		float distanceToWall = 0.0f;
+		bool hitWall = false;
+		bool boundry = false;
+		while (!hitWall && distanceToWall < kDepth) {
+			distanceToWall += 0.1f;
+
+			Int2 test = { ((int32_t)(m_playerPosition.x + (eye.x * distanceToWall))) / (int32_t)kTileSize,
+						  ((int32_t)(m_playerPosition.y + (eye.y * distanceToWall))) / (int32_t)kTileSize };
+
+			if (test.x < 0 || test.x >= kGridSize || test.y < 0 || test.y >= kGridSize) {
+				hitWall = true;
 				break;
+			} else {
+				if (pGrid->GetState(test) == GridState::Collision) {
+					hitWall = true;
+					break;
+				}
 			}
 		}
 
-		SDL_RenderDrawLine(pRenderer, m_playerPosition.x, m_playerPosition.y, newXa, newYa);
+		if (hitWall) {
+			const Float2 hit = { m_playerPosition.x + (eye.x * distanceToWall), m_playerPosition.y + (eye.y * distanceToWall) };
+			SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
+			SDL_RenderDrawLine(pRenderer, m_playerPosition.x, m_playerPosition.y, hit.x, hit.y);
+		}
 	}
-*/
 }
