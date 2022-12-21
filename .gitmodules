@@ -1,0 +1,3 @@
+[submodule "examples/CommandLineFPS"]
+	path = examples/CommandLineFPS
+	url = https://github.com/OneLoneCoder/CommandLineFPS.git
