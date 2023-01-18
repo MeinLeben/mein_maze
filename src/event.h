@@ -1,6 +1,6 @@
 #pragma once
 
-class EventHandler {
+class IEventHandler {
 protected:
 	virtual void HandleEvent(SDL_Event& event) = 0;
 
@@ -14,11 +14,11 @@ public:
 		return ms_instance;
 	}
 
-	inline void Register(EventHandler* pEventHandler) {
+	inline void Register(IEventHandler* pEventHandler) {
 		m_eventHandlers.insert(pEventHandler);
 	}
 
-	inline void DeRegister(EventHandler* pEventHandler) {
+	inline void DeRegister(IEventHandler* pEventHandler) {
 		m_eventHandlers.erase(pEventHandler);
 	}
 
@@ -29,5 +29,5 @@ private:
 	EventManager& operator=(const EventManager&) = delete;
 
 	static EventManager ms_instance;
-	std::unordered_set<EventHandler*> m_eventHandlers;
+	std::unordered_set<IEventHandler*> m_eventHandlers;
 };

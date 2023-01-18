@@ -4,7 +4,7 @@
 
 ViewManager ViewManager::ms_instance;
 
-View::View(const std::string& title, int32_t x, int32_t y, int32_t width, int32_t height) {
+IView::IView(const std::string& title, int32_t x, int32_t y, int32_t width, int32_t height) {
 	ViewManager::Get().Register(this);
 	EventManager::Get().Register(this);
 
@@ -12,16 +12,16 @@ View::View(const std::string& title, int32_t x, int32_t y, int32_t width, int32_
 	m_renderer = std::make_unique<SDLWrapper::Renderer>(m_window->get(), -1, SDL_RENDERER_ACCELERATED);
 }
 
-View::View(const std::string& title, int32_t width, int32_t height) 
-	: View(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height) {
+IView::IView(const std::string& title, int32_t width, int32_t height) 
+	: IView(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height) {
 }
 
-View::~View() {
+IView::~IView() {
 	EventManager::Get().DeRegister(this);
 	ViewManager::Get().DeRegister(this);
 }
 
-void View::HandleEvent(SDL_Event& event) {
+void IView::HandleEvent(SDL_Event& event) {
 	if (event.window.windowID != SDL_GetWindowID(GetWindow())) {
 		return;
 	}
@@ -42,6 +42,12 @@ void View::HandleEvent(SDL_Event& event) {
 void ViewManager::Update() {
 	for (auto view : m_views) {
 		view->Update();
+	}
+}
+
+void ViewManager::PreRender() {
+	for (auto view : m_views) {
+		view->PreRender();
 	}
 }
 

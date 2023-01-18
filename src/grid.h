@@ -31,6 +31,14 @@ public:
 		return GetState(position.x, position.y);
 	}
 
+	inline int32_t GetWidth() const {
+		return m_width;
+	}
+
+	inline int32_t GetHeight() const {
+		return m_height;
+	}
+
 private:
 	GridState* m_pContainer = nullptr;
 	int32_t m_width, m_height;

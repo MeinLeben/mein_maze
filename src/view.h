@@ -3,12 +3,12 @@
 #include "event.h"
 #include "sdl_wrapper.h"
 
-class View : public EventHandler {
+class IView : public IEventHandler {
 public:
-	View(const std::string& title, int32_t width, int32_t height);
-	View(const std::string& title, int32_t x, int32_t y, int32_t width, int32_t height);
+	IView(const std::string& title, int32_t width, int32_t height);
+	IView(const std::string& title, int32_t x, int32_t y, int32_t width, int32_t height);
 
-	virtual ~View();
+	virtual ~IView();
 
 	inline void Show(bool show) {
 		m_isVisible = show;
@@ -55,6 +55,7 @@ protected:
 	virtual void HandleEvent(SDL_Event& event);
 
 	virtual void Update() = 0;
+	virtual void PreRender() = 0;
 	virtual void Render() = 0;
 
 	inline SDL_Window* GetWindow() const {
@@ -82,16 +83,17 @@ public:
 		return ms_instance;
 	}
 
-	inline void Register(View* pView) {
+	inline void Register(IView* pView) {
 		m_views.insert(pView);
 	}
 
-	inline void DeRegister(View* pView) {
+	inline void DeRegister(IView* pView) {
 		m_views.erase(pView);
 	}
 
 	void Update();
 
+	void PreRender();
 	void Render();
 
 private:
@@ -100,5 +102,5 @@ private:
 	ViewManager& operator=(const ViewManager&) = delete;
 
 	static ViewManager ms_instance;
-	std::unordered_set<View*> m_views;
+	std::unordered_set<IView*> m_views;
 };

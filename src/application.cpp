@@ -3,6 +3,7 @@
 #include "application.h"
 
 #include "grid.h"
+#include "raycaster.h"
 #include "time.h"
 
 Application::Application(int32_t argc, char* argv[]) {
@@ -14,12 +15,16 @@ Application::Application(int32_t argc, char* argv[]) {
 
 	EventManager::Get().Register(this);
 
-	m_maze = std::make_unique<Maze>();
-	m_mazeView = std::make_unique<MazeView>(m_maze.get());
+	const Int2 numTiles = {10, 10};
+	const Int2 sizePerTile = {64, 64};
+	m_maze = std::make_unique<Maze>(numTiles, sizePerTile);
+	m_mazeView = std::make_unique<MazeView>(m_maze->GetSize().x, m_maze->GetSize().y, m_maze.get());
 	m_mazeView->RegisterOnClose(std::bind(&Application::OnViewClose, this));
 
-	m_playerPosition.x = m_mazeView->GetTileSize() / 2.0f;
-	m_playerPosition.y = m_mazeView->GetTileSize() / 2.0f;
+	m_start = {0, 0};
+	m_destination = {numTiles.x -1 , numTiles.y - 1};
+
+	m_playerPosition = (Float2)m_maze->GetSizePerTile() / 2.0f;
 
 	const int32_t x = m_mazeView->GetPosition().x + m_mazeView->GetSize().x + 10;
 	const int32_t y = m_mazeView->GetPosition().y;
@@ -46,6 +51,15 @@ int32_t Application::Run() {
 		UpdateMaze();
 
 		ViewManager::Get().Update();
+
+		ViewManager::Get().PreRender();
+
+		RayCasterInfo info;
+		info.pMaze = m_maze.get();
+		info.sourceAngle = m_playerAngle;
+		info.sourcePosition = m_playerPosition;
+
+		RayCaster::Get().Execute(info);
 		ViewManager::Get().Render();
 	}
 
@@ -162,4 +176,3 @@ void Application::OnFindPathFinished(bool result) {
 void Application::OnViewClose() {
 	Shutdown();
 }
-

@@ -1,13 +1,16 @@
 #pragma once
 
+#include "raycaster.h"
 #include "view.h"
 
 class Maze;
 
-class MazeView : public View {
+class MazeView : public IView, public IRayHandler {
 public:
-	MazeView(int32_t x, int32_t y, Maze* pMaze);
-	MazeView(Maze* pMaze);
+	MazeView(int32_t width, int32_t height, Maze* pMaze);
+	MazeView(int32_t x, int32_t y, int32_t width, int32_t height, Maze* pMaze);
+
+	~MazeView();
 
 	inline void ShowPath(bool show) {
 		m_showPath = show;
@@ -25,21 +28,18 @@ public:
 		m_playerAngle = angle;
 	}
 
-	inline int32_t GetTileSize() const {
-		return kWindowHeight / kGridSize;
-	}
-
 protected:
 	virtual void HandleEvent(SDL_Event& event) override;
 
 	virtual void Update() override;
+
+	virtual void PreRender() override;
 	virtual void Render() override;
+
+	virtual void OnHit(const Ray& ray) override;
 
 private:
 	void RenderRaycaster(SDL_Renderer* pRenderer, const Maze* pMaze);
-
-	const static int32_t kWindowWidth = 640;
-	const static int32_t kWindowHeight = 640;
 
 	Maze* m_pMaze = nullptr;
 

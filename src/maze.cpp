@@ -2,9 +2,11 @@
 
 #include "maze.h"
 
-Maze::Maze() {
+Maze::Maze(Int2 numTiles, Int2 sizePerTile) 
+	: m_numTiles(numTiles)
+	, m_sizePerTile(sizePerTile) {
 	m_pathFinder = std::make_unique<PathFinder>();
-	m_grid = std::make_unique<Grid>(kGridSize, kGridSize);
+	m_grid = std::make_unique<Grid>(m_numTiles.x, m_numTiles.y);
 }
 
 Maze::~Maze() {
@@ -26,8 +28,8 @@ void Maze::GenerateRandomPattern(uint8_t weight) {
 		return;
 	}
 
-	for (int32_t y = 0; y < kGridSize; y++) {
-		for (int32_t x = 0; x < kGridSize; x++) {
+	for (int32_t y = 0; y < m_numTiles.y; y++) {
+		for (int32_t x = 0; x < m_numTiles.x; x++) {
 			m_grid->SetState(x, y, (GridState)(rand() % weight == 0));
 		}
 	}

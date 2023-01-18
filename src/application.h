@@ -5,7 +5,7 @@
 #include "maze.h"
 #include "maze_view.h"
 
-class Application : public EventHandler {
+class Application : public IEventHandler {
 public:
 	Application(int32_t argc, char* argv[]);
 	~Application();
@@ -31,11 +31,13 @@ private:
 	bool m_isRunning = true;
 
 	std::unique_ptr<Maze> m_maze;
+
 	std::unique_ptr<MazeView> m_mazeView;
 	std::unique_ptr<GameView> m_gameView;
 
-	Int2 m_start = { 0, 0 };
-	Int2 m_destination = { kGridSize - 1, kGridSize - 1 };
+
+	Int2 m_start = {};
+	Int2 m_destination = {};
 	uint64_t m_numberOfFails = 0;
 	bool m_auto = false;
 

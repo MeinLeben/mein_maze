@@ -42,7 +42,7 @@ void PathFinder::Execute(const Int2& start, const Int2& destination, const Grid*
 
 				const Int2 childPos = { q->pos.x + x, q->pos.y + y };
 				if (childPos.x < 0 || childPos.y < 0 ||
-					childPos.x >= kGridSize || childPos.y >= kGridSize) {
+					childPos.x >= pGrid->GetWidth() || childPos.y >= pGrid->GetHeight()) {
 					continue;
 				}
 

@@ -5,7 +5,7 @@
 
 class Maze {
 public:
-	Maze();
+	Maze(Int2 numTiles, Int2 sizePerTile);
 	~Maze();
 
 	void Update();
@@ -31,6 +31,18 @@ public:
 		return m_grid.get();
 	}
 
+	inline Int2 GetNumTiles() const {
+		return	m_numTiles;
+	}
+
+	inline Int2 GetSizePerTile() const {
+		return m_sizePerTile;
+	}
+
+	inline Int2 GetSize() const {
+		return m_numTiles * m_sizePerTile;
+	}
+
 private:
 	void OnFindPathFinished(bool result);
 
@@ -43,4 +55,7 @@ private:
 	bool m_isFinished = true;
 	std::atomic<bool> m_onResult = false;
 	std::atomic<bool> m_result = false;
+
+	Int2 m_numTiles = {};
+	Int2 m_sizePerTile = {};
 };

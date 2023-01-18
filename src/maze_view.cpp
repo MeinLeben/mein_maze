@@ -7,21 +7,24 @@
 
 const static std::string kTitle = "Mein Maze";
 
-const static float kFOV = 60.0f;
-const static Float2 kProjectionPlane = { 320.0f, 200.0f };
-
-MazeView::MazeView(Maze* pMaze) 
-	: View(kTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, kWindowWidth, kWindowHeight)
+MazeView::MazeView(int32_t width, int32_t height, Maze* pMaze) 
+	: IView(kTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height)
 	, m_pMaze(pMaze) {
+	RayCaster::Get().RegisterHandler(this);
 }
 
-MazeView::MazeView(int32_t x, int32_t y, Maze* pMaze) 
-	: View(kTitle, x, y, kWindowWidth, kWindowHeight)
+MazeView::MazeView(int32_t x, int32_t y, int32_t width, int32_t height, Maze* pMaze) 
+	: IView(kTitle, x, y, width, height)
 	, m_pMaze(pMaze) {
+	RayCaster::Get().RegisterHandler(this);
+}
+
+MazeView::~MazeView() {
+	RayCaster::Get().DeRegisterHandler(this);
 }
 
 void MazeView::HandleEvent(SDL_Event& event) {
-	View::HandleEvent(event);
+	IView::HandleEvent(event);
 
 	if (event.window.windowID != SDL_GetWindowID(GetWindow())) {
 		return;
@@ -51,28 +54,32 @@ void MazeView::Update() {
 
 }
 
-void MazeView::Render() {
+void MazeView::PreRender() {
 	SDL_Renderer* pRenderer = GetRenderer();
 	SDL_SetRenderDrawColor(pRenderer, 128, 128, 255, 255);
 	SDL_RenderClear(pRenderer);
+}
 
+void MazeView::Render() {
+	SDL_Renderer* pRenderer = GetRenderer();
 	SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
 
-	const int32_t numLines = kGridSize + 1;
-	const int32_t tileSize = GetTileSize();
-
-	for (int32_t l = 0; l < numLines; l++) {
-		int32_t lineOffset = l * tileSize;
-		SDL_RenderDrawLine(pRenderer, lineOffset, 0, lineOffset, kWindowHeight);
-		SDL_RenderDrawLine(pRenderer, 0, lineOffset, kWindowHeight, lineOffset);
+	for (int32_t l = 0; l < m_pMaze->GetNumTiles().x; l++) {
+		int32_t lineOffset = l * m_pMaze->GetSizePerTile().x;
+		SDL_RenderDrawLine(pRenderer, 0, lineOffset, GetSize().x, lineOffset);
 	}
 
+	for (int32_t l = 0; l < m_pMaze->GetNumTiles().y; l++) {
+		int32_t lineOffset = l * m_pMaze->GetSizePerTile().y;
+		SDL_RenderDrawLine(pRenderer, lineOffset, 0, lineOffset, GetSize().y);
+	}
+	
 	const Grid* pGrid = m_pMaze->GetGrid();
-	for (int32_t y = 0; y < kGridSize; y++) {
-		for (int32_t x = 0; x < kGridSize; x++) {
+	for (int32_t y = 0; y < m_pMaze->GetNumTiles().y; y++) {
+		for (int32_t x = 0; x < m_pMaze->GetNumTiles().x; x++) {
 			if (pGrid->GetState(x, y) == GridState::Collision) {
 				SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 255);
-				SDL_Rect rect = { x * tileSize + 1, y * tileSize + 1, tileSize - 1, tileSize - 1 };
+				SDL_Rect rect = { x * m_pMaze->GetSizePerTile().x + 1, y * m_pMaze->GetSizePerTile().y + 1, m_pMaze->GetSizePerTile().x - 1, m_pMaze->GetSizePerTile().y - 1 };
 				SDL_RenderFillRect(pRenderer, &rect);
 			}
 		}
@@ -82,14 +89,12 @@ void MazeView::Render() {
 		const std::vector<Int2>& path = m_pMaze->GetPath();
 		for (auto pos : path) {
 			SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
-			SDL_Rect rect = { pos.x * tileSize + 1, pos.y * tileSize + 1, tileSize - 1, tileSize - 1 };
+			SDL_Rect rect = { pos.x * m_pMaze->GetSizePerTile().x + 1, pos.y * m_pMaze->GetSizePerTile().y + 1, m_pMaze->GetSizePerTile().x - 1, m_pMaze->GetSizePerTile().y - 1 };
 			SDL_RenderFillRect(pRenderer, &rect);
 		}
 	}
 
 	if (m_showPlayer) {
-		RenderRaycaster(pRenderer, m_pMaze);
-
 		SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
 		SDL_RenderFillCircle(pRenderer, m_playerPosition.x, m_playerPosition.y, 16);
 
@@ -99,51 +104,18 @@ void MazeView::Render() {
 		SDL_RenderDrawLine(pRenderer, m_playerPosition.x, m_playerPosition.y, x, y);
 	}
 
-	const int32_t x = ((m_mousePosition.x - 2) / tileSize) * tileSize;
-	const int32_t y = ((m_mousePosition.y - 3) / tileSize) * tileSize;
+	const int32_t x = ((m_mousePosition.x - 2) / m_pMaze->GetSizePerTile().x) * m_pMaze->GetSizePerTile().x;
+	const int32_t y = ((m_mousePosition.y - 3) / m_pMaze->GetSizePerTile().y) * m_pMaze->GetSizePerTile().y;
 	SDL_SetRenderDrawColor(pRenderer, m_highlightColor.x, m_highlightColor.y, m_highlightColor.z, 255);
-	const SDL_Rect rect = {x + 1, y + 1, tileSize - 1, tileSize - 1};
+	const SDL_Rect rect = {x + 1, y + 1, m_pMaze->GetSizePerTile().x - 1, m_pMaze->GetSizePerTile().y - 1};
 	SDL_RenderFillRect(pRenderer, &rect);
 	SDL_RenderPresent(pRenderer);
 }
 
-void MazeView::RenderRaycaster(SDL_Renderer* pRenderer, const Maze* pMaze) {
-	const float kMapHeight = kWindowHeight;
-	const float kMapWidth = kWindowHeight;
-	const float kTileSize = kMapHeight / kGridSize;
-	const float kDepth = sqrtf((kWindowHeight * kWindowHeight) + (kWindowHeight * kWindowHeight));
-
-	const Grid* pGrid = pMaze->GetGrid();
-
-	float startAngle = Rad2Deg(m_playerAngle) - kFOV * 0.5f;
-	for (int32_t x = 0; x < kProjectionPlane.x; x++) {
-		const float rayAngle = Deg2Rad(startAngle + (kFOV / kProjectionPlane.x) * x);
-		const Float2 eye = { cosf(rayAngle), sinf(rayAngle) };
-
-		float distanceToWall = 0.0f;
-		bool hitWall = false;
-		bool boundry = false;
-		while (!hitWall && distanceToWall < kDepth) {
-			distanceToWall += 0.1f;
-
-			Int2 test = { ((int32_t)(m_playerPosition.x + (eye.x * distanceToWall))) / (int32_t)kTileSize,
-						  ((int32_t)(m_playerPosition.y + (eye.y * distanceToWall))) / (int32_t)kTileSize };
-
-			if (test.x < 0 || test.x >= kGridSize || test.y < 0 || test.y >= kGridSize) {
-				hitWall = true;
-				break;
-			} else {
-				if (pGrid->GetState(test) == GridState::Collision) {
-					hitWall = true;
-					break;
-				}
-			}
-		}
-
-		if (hitWall) {
-			const Float2 hit = { m_playerPosition.x + (eye.x * distanceToWall), m_playerPosition.y + (eye.y * distanceToWall) };
-			SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
-			SDL_RenderDrawLine(pRenderer, m_playerPosition.x, m_playerPosition.y, hit.x, hit.y);
-		}
+void MazeView::OnHit(const Ray& ray) {
+	if (m_showPlayer) {
+		const Float2 hit = { ray.startPosition.x + (ray.direction.x * ray.distanceTo), ray.startPosition.y + (ray.direction.y * ray.distanceTo) };
+		SDL_SetRenderDrawColor(GetRenderer(), 255, 0, 0, 255);
+		SDL_RenderDrawLine(GetRenderer(), ray.startPosition.x, ray.startPosition.y, hit.x, hit.y);
 	}
 }
