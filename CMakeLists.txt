@@ -20,13 +20,15 @@ if (WIN32)
 	set(SDL2TTFDIR "${CMAKE_SOURCE_DIR}/external/SDL2_ttf")
 	set(SDL2TTF_LIBRARY "${CMAKE_SOURCE_DIR}/external/SDL2_ttf/lib/${ARCH}/SDL2_ttf.lib")
 	set(SDL2TTF_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/external/SDL2_ttf/include/")
-endif()
+	
+	include_directories(${SDL2_INCLUDE_DIRS} ${SDL2TTF_INCLUDE_DIR})
+else ()
+	find_package(SDL2_ttf REQUIRED)
+endif ()
 
 find_package(SDL2 REQUIRED)
 
 add_definitions(-DDEBUG)
-
-include_directories(${SDL2_INCLUDE_DIRS} ${SDL2TTF_INCLUDE_DIR})
 
 file(GLOB SOURCE "./src/*.cpp" "./src/*.h" "./src/*.cxx")
 
@@ -35,7 +37,11 @@ add_executable(mein_maze ${SOURCE})
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT mein_maze)
 set_property(TARGET mein_maze PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:mein_maze>")
 
-target_link_libraries(mein_maze ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARY})
+if (WIN32)
+	target_link_libraries(mein_maze ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARY} SDL2_ttf::SDL2_ttf)
+else ()
+	target_link_libraries(mein_maze SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+endif ()
 target_precompile_headers(mein_maze PRIVATE src/pch.h)
 
 if (WIN32)
